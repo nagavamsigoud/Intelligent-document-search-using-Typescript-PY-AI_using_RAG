@@ -1,0 +1,5 @@
+.env
+*.env
+Backend-new/.env
+node_modules/
+__pycache__/
