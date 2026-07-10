@@ -5,6 +5,7 @@ from dotenv import load_dotenv  # Add this
 
 
 import dj_database_url
+from datetime import timedelta
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -104,6 +105,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
+        
     ),
 }
 

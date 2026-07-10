@@ -29,7 +29,7 @@ const token = localStorage.getItem("accessToken");
 const initialState: AuthState = {
   accessToken: token,
   refreshToken: localStorage.getItem("refreshToken"),
-  // 👇 If a token exists in localStorage, set status to authenticated right away!
+  //  If a token exists in localStorage, set status to authenticated right away!
   status: token ? "authenticated" : "idle", 
   error: null,
 };

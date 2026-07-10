@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Added useNavigate for clean kick-outs
-import { aiApi, authApi, getAuthHeaders } from "../api/client";
+import { aiApi, authApi } from "../api/client";
 import ModeToggle from "../components/ModeToggle";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import { logout } from "../store/authSlice";
@@ -193,8 +193,8 @@ export default function DashboardPage() {
       await authApi.delete(`/documents/history/${itemId}/`);
       setHistory((prev) => prev.filter((item) => item.id !== itemId));
       setStatusMessage("History item removed.");
-    } catch (err) {
-      print("Delete Item Error:", err);
+    } catch(err) {
+      console.log(`Delete Item Error: ${err}`);
       setStatusMessage("Failed to delete. You may need to log in again.");
     }
   }
