@@ -202,8 +202,16 @@ def build_answer(question: str, mode: str, sources: list[dict]):
     
     # Intelligent prompt balancing for modes
     if mode == "general":
-        system_prompt = "You are an intelligent AI assistant. Answer the user comprehensively using your global training data knowledge base."
-        user_content = question
+        system_prompt = (
+            "You are an intelligent AI assistant. Answer the user comprehensively using your "
+            "own general knowledge. If the provided document context is relevant to the "
+            "question, you may use it to enrich your answer, but you are not limited to it."
+        )
+        if sources:
+            context = "\n\n".join(f"Source: {s['title']} (Page {s['page']})\n{s['text']}" for s in sources)
+            user_content = f"Document context (optional, use only if relevant):\n{context}\n\nQuestion: {question}"
+        else:
+            user_content = question
     elif mode == "hybrid":
         context = "\n\n".join(f"Source: {s['title']} (Page {s['page']})\n{s['text']}" for s in sources)
         system_prompt = "You are a professional assistant blending document retrieval and general logic. Answer using the context if helpful, otherwise fallback to general knowledge."

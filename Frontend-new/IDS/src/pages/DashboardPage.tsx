@@ -368,23 +368,25 @@ export default function DashboardPage() {
               </div>
 
               <div className="mt-5 space-y-3">
-                {sources.length === 0 && (
-                  <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500">
-                    Source citations will appear here after a successful search.
-                  </div>
-                )}
-
-                {sources.map((source) => (
-                  <div key={`${source.title}-${source.score}`} className="grid grid-cols-[64px_1fr] gap-4 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
-                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-emerald-100 font-semibold text-emerald-900">
-                      {source.score}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-stone-900">{source.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-stone-600">{source.text}</p>
-                    </div>
-                  </div>
-                ))}
+                {sources.length === 0 ? (
+  <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500 text-center">
+    Source citations will appear here after a successful search.
+  </div>
+) : (
+  // FIX: Destructure the built-in loop array index (idx)
+  sources.map((source, idx) => (
+    // FIX: Using index guarantees keys will ALWAYS remain completely unique
+    <div key={`source-citation-${idx}`} className="rounded-[1.5rem] border border-stone-200 bg-white p-4 text-xs shadow-sm">
+      <div className="flex justify-between items-center mb-2 pb-1 border-b border-stone-200 gap-2">
+        <span className="font-bold truncate max-w-[130px] text-stone-800">📄 {source.title}</span>
+        <span className="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
+          Score: {source.score}
+        </span>
+      </div>
+      <p className="text-stone-600 font-medium leading-relaxed">{source.text}</p>
+    </div>
+  ))
+)}
               </div>
             </div>
 
