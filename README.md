@@ -52,7 +52,6 @@ Main files:
 
 ```text
 Frontend-new/IDS/src/api/client.ts
-Frontend-new/IDS/src/api/api.ts
 ```
 
 ### 4. Dashboard
