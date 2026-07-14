@@ -18,6 +18,7 @@ export type SourceItem = {
   score: string;
   title: string;
   text: string;
+  page: number;
 };
 
 export type ChatHistoryItem = {

@@ -25,11 +25,22 @@ export default function DashboardPage() {
   const [statusMessage, setStatusMessage] = useState("Synchronizing knowledge base...");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
 
   const indexedDocuments = useMemo(
     () => documents.filter((document) => document.status === "indexed"),
     [documents],
   );
+
+  const filteredHistory = useMemo(() => {
+    const term = historySearch.trim().toLowerCase();
+    if (!term) return history;
+    return history.filter(
+      (item) =>
+        item.question.toLowerCase().includes(term) || item.answer.toLowerCase().includes(term),
+    );
+  }, [history, historySearch]);
 
   // FIX: Read directly from localStorage on refresh to protect against Redux lag race conditions
   useEffect(() => {
@@ -213,26 +224,40 @@ export default function DashboardPage() {
             <p className="mt-4 text-base leading-8 text-stone-600">{statusMessage}</p>
           </div>
 
-          {currentTokenActive ? (
+          <div className="flex flex-wrap items-start gap-3">
             <button
-              onClick={() => {
-                dispatch(logout());
-                navigate("/login");
-              }}
-              className="self-start rounded-full border border-stone-300 bg-stone-50 px-5 py-3 font-semibold text-stone-700"
+              onClick={() => setShowActivity(true)}
+              className="relative self-start rounded-full border border-stone-300 bg-stone-50 px-5 py-3 font-semibold text-stone-700"
             >
-              Logout
+              Activity
+              {history.length > 0 && (
+                <span className="ml-2 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
+                  {history.length}
+                </span>
+              )}
             </button>
-          ) : (
-            <div className="flex gap-3">
-              <Link to="/login" className="rounded-full border border-stone-300 bg-stone-50 px-5 py-3 font-semibold text-stone-700">
-                Login
-              </Link>
-              <Link to="/register" className="rounded-full bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-red-600 transition-colors shadow-lg shadow-orange-900/40">
-                Register
-              </Link>
-            </div>
-          )}
+
+            {currentTokenActive ? (
+              <button
+                onClick={() => {
+                  dispatch(logout());
+                  navigate("/login");
+                }}
+                className="self-start rounded-full border border-stone-300 bg-stone-50 px-5 py-3 font-semibold text-stone-700"
+              >
+                Logout
+              </button>
+            ) : (
+              <div className="flex gap-3">
+                <Link to="/login" className="rounded-full border border-stone-300 bg-stone-50 px-5 py-3 font-semibold text-stone-700">
+                  Login
+                </Link>
+                <Link to="/register" className="rounded-full bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-red-600 transition-colors shadow-lg shadow-orange-900/40">
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
 
         <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
@@ -248,7 +273,13 @@ export default function DashboardPage() {
             </div>
 
             <label className="mb-4 grid min-h-40 cursor-pointer place-items-center rounded-[1.75rem] border-2 border-dashed border-cyan-300 bg-cyan-50 px-4 text-center">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.csv,.txt,application/pdf,text/csv,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={handleFileChange}
+              />
               <span className="text-lg font-semibold text-cyan-900">{uploading ? "Uploading..." : "Upload PDF, DOCX, CSV, TXT"}</span>
               <p className="mt-2 text-sm text-stone-500">Files are parsed, chunked, embedded, and indexed for retrieval.</p>
             </label>
@@ -256,30 +287,21 @@ export default function DashboardPage() {
             <div className="mb-5 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 font-semibold text-stone-700"
+                onClick={() => exportHistory("csv")}
+                className="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700"
               >
-                Import docs
+                Export CSV
               </button>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => exportHistory("csv")}
-                  className="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700"
-                >
-                  Export CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={() => exportHistory("pdf")}
-                  className="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700"
-                >
-                  Export PDF
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => exportHistory("pdf")}
+                className="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700"
+              >
+                Export PDF
+              </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
               {documents.length === 0 && (
                 <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500">
                   No documents uploaded yet. Login and import a file to start indexing.
@@ -367,64 +389,22 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              <div className="mt-5 space-y-3">
-                {sources.length === 0 ? (
-  <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500 text-center">
-    Source citations will appear here after a successful search.
-  </div>
-) : (
-  // FIX: Destructure the built-in loop array index (idx)
-  sources.map((source, idx) => (
-    // FIX: Using index guarantees keys will ALWAYS remain completely unique
-    <div key={`source-citation-${idx}`} className="rounded-[1.5rem] border border-stone-200 bg-white p-4 text-xs shadow-sm">
-      <div className="flex justify-between items-center mb-2 pb-1 border-b border-stone-200 gap-2">
-        <span className="font-bold truncate max-w-[130px] text-stone-800">📄 {source.title}</span>
-        <span className="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
-          Score: {source.score}
-        </span>
-      </div>
-      <p className="text-stone-600 font-medium leading-relaxed">{source.text}</p>
-    </div>
-  ))
-)}
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-lg">
-              <div className="mb-5 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-500">Saved activity</p>
-                  <h2 className="mt-3 text-3xl font-semibold">Recent history</h2>
-                </div>
-                <span className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700">
-                  {history.length} entries
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {history.length === 0 && (
+              <div className="mt-5 max-h-[420px] space-y-3 overflow-y-auto pr-1">
+                {sources.length === 0 && (
                   <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500">
-                    Your searched prompts and answers will appear here after you start using the system.
+                    Source citations will appear here after a successful search.
                   </div>
                 )}
 
-                {history.slice(0, 6).map((item) => (
-                  <div key={item.id} className="relative rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 group">
-                    <button
-                      onClick={() => handleDeleteHistoryItem(item.id)}
-                      className="absolute top-4 right-4 text-stone-400 hover:text-rose-500 transition-colors"
-                      title="Delete item"
-                    >
-                      🗑️
-                    </button>
-
-                    <div className="flex flex-wrap items-start justify-between gap-3 pr-8">
-                      <h3 className="font-semibold text-stone-900">{item.question}</h3>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-900">
-                        {item.mode}
-                      </span>
+                {sources.map((source, index) => (
+                  <div key={`${source.title}-${source.page}-${index}`} className="grid grid-cols-[64px_1fr] gap-4 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
+                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-emerald-100 font-semibold text-emerald-900">
+                      {source.score}
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-stone-600">{item.answer}</p>
+                    <div>
+                      <h3 className="font-semibold text-stone-900">{source.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-stone-600">{source.text}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -432,6 +412,75 @@ export default function DashboardPage() {
           </section>
         </section>
       </div>
+
+      {showActivity && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40" onClick={() => setShowActivity(false)}>
+          <aside
+            className="flex h-full w-full max-w-md flex-col bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-500">Saved activity</p>
+                <h2 className="mt-3 text-2xl font-semibold">Recent history</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowActivity(false)}
+                className="rounded-full border border-stone-300 bg-stone-50 px-4 py-2 text-sm font-semibold text-stone-700"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mb-4 flex items-center gap-3">
+              <input
+                value={historySearch}
+                onChange={(event) => setHistorySearch(event.target.value)}
+                placeholder="Search your past questions"
+                className="min-w-0 flex-1 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-stone-900 outline-none placeholder:text-stone-400"
+              />
+              <span className="whitespace-nowrap rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700">
+                {filteredHistory.length} / {history.length}
+              </span>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+              {history.length === 0 && (
+                <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500">
+                  Your searched prompts and answers will appear here after you start using the system.
+                </div>
+              )}
+
+              {history.length > 0 && filteredHistory.length === 0 && (
+                <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-6 text-stone-500">
+                  No saved questions match "{historySearch}".
+                </div>
+              )}
+
+              {filteredHistory.map((item) => (
+                <div key={item.id} className="relative rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 group">
+                  <button
+                    onClick={() => handleDeleteHistoryItem(item.id)}
+                    className="absolute top-4 right-4 text-stone-400 hover:text-rose-500 transition-colors"
+                    title="Delete item"
+                  >
+                    🗑️
+                  </button>
+
+                  <div className="flex flex-wrap items-start justify-between gap-3 pr-8">
+                    <h3 className="font-semibold text-stone-900">{item.question}</h3>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-900">
+                      {item.mode}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-stone-600">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      )}
     </main>
   );
 }
