@@ -162,7 +162,7 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
 
 # FastAPI / LLM
 GROQ_API_KEY=replace-with-your-groq-api-key
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-120b
 EMBEDDING_DIMENSIONS=384
 
 # Django -> FastAPI
