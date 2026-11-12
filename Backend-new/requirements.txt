@@ -1,0 +1,25 @@
+django>=5.1.1
+djangorestframework>=3.15.2
+djangorestframework-simplejwt>=5.3.1
+django-cors-headers>=4.4.0
+dj-database-url>=2.2.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+pydantic-settings>=2.5.2
+psycopg[binary]>=3.2.1
+psycopg-pool>=3.2.1
+python-multipart>=0.0.9
+pdfplumber>=0.11.0
+pypdf>=5.0.1
+python-docx>=1.1.2
+reportlab>=4.2.5
+requests>=2.32.3
+groq>=0.9.0
+sentence-transformers>=3.0.0
+python-dotenv>=1.0.1
+openpyxl>=3.1.5
+
+# --- Project Architecture Directory Key ---
+# config       --- Main Django Project Management Directory
+# accounts     --- Django Application Sub-Module (Auth Flow)
+# backend-IDS  --- Python Virtual Environment (.venv) Path Container
